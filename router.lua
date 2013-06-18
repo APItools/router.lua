@@ -1,13 +1,11 @@
-require 'lib.ngx_mock'
-
 local router = {}
 
 local function split(str, delimiter)
-  local res = {}
-  for i in string.gmatch(str, "[^/]+") do
-    table.insert(res, i)
+  local result = {}
+  for chunk in str:gmatch("[^/]+") do
+    result[#result + 1] = chunk
   end
-  return res
+  return result
 end
 
 local function tail(t)
@@ -17,19 +15,9 @@ local function tail(t)
 end
 
 function copy(t)
-  local t2 = {}
-  for k,v in pairs(t) do
-    t2[k] = v
-  end
-  return t2
-end
-
-router.leaf = {}
-
-router.compiled_routes = {}
-
-router.resolve = function(method, path)
-  return router.resolve_rec(split(path, "/"),  router.compiled_routes[method] , {})
+  local result = {}
+  for k,v in pairs(t) do result[k] = v end
+  return result
 end
 
 -- gets all the available routes with wildcards from a given node
@@ -43,24 +31,25 @@ local function parameters_of(root)
   return params
 end
 
-router.resolve_rec = function(tokenized_path, root, params)
-   if not root then
-      return nil
-   elseif #tokenized_path == 0 and root[router.leaf] then
+local function is_empty(t)
+  return not next(t)
+end
+
+local function resolve_rec(tokenized_path, root, params)
+  if not root then
+    return nil
+  elseif #tokenized_path == 0 and root[router.leaf] then
     return root[router.leaf], params
   elseif root and root[tokenized_path[1]] then -- fixed string
-    return router.resolve_rec(tail(tokenized_path), root[tokenized_path[1]], params)
+    return resolve_rec(tail(tokenized_path), root[tokenized_path[1]], params)
   else
     local child_params = parameters_of(root)
-    local child_path   = tail(tokenized_path)
-    if child_params ~= {} then
+    if not is_empty(child_params) then
+      local child_path   = tail(tokenized_path)
       for k, v in ipairs(parameters_of(root)) do
         local p2 = copy(params)
         p2[v.param] = tokenized_path[1]
-        local f, bindings = router.resolve_rec(
-          child_path,
-          root[v],
-          p2)
+        local f, bindings = resolve_rec(child_path, root[v], p2)
         if f then return f, bindings end
       end
     end
@@ -68,12 +57,19 @@ router.resolve_rec = function(tokenized_path, root, params)
   return false
 end
 
+router.leaf = {}
+router.compiled_routes = {}
+
+router.resolve = function(method, path)
+  return resolve_rec(split(path, "/"),  router.compiled_routes[method] , {})
+end
+
 router.execute = function(method, path)
-  local f,params = router.resolve(method, path)
+  local f, params = router.resolve(method, path)
   if f then
-     return f(params)
+    return f(params)
   else
-     router.default_action({})
+    router.default_action({})
   end
 end
 
