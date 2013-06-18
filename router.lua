@@ -21,11 +21,11 @@ function copy(t)
 end
 
 -- gets all the available routes with wildcards from a given node
-local function parameters_of(root)
+local function collect_parameters_for(node)
   local params = {}
-  for key, child in pairs(root) do
+  for key, child in pairs(node) do
     if type(key) == "table" and key.param then           -- params
-      table.insert(params, key)
+      params[#params + 1] = key
     end
   end
   return params
@@ -35,21 +35,21 @@ local function is_empty(t)
   return not next(t)
 end
 
-local function resolve_rec(tokenized_path, root, params)
-  if not root then
+local function resolve_rec(tokenized_path, node, params)
+  if not node then
     return nil
-  elseif #tokenized_path == 0 and root[router.leaf] then
-    return root[router.leaf], params
-  elseif root and root[tokenized_path[1]] then -- fixed string
-    return resolve_rec(tail(tokenized_path), root[tokenized_path[1]], params)
+  elseif #tokenized_path == 0 and node[router.leaf] then
+    return node[router.leaf], params
+  elseif node and node[tokenized_path[1]] then -- fixed string
+    return resolve_rec(tail(tokenized_path), node[tokenized_path[1]], params)
   else
-    local child_params = parameters_of(root)
+    local child_params = collect_parameters_for(node)
     if not is_empty(child_params) then
-      local child_path   = tail(tokenized_path)
-      for k, v in ipairs(parameters_of(root)) do
+      local child_path = tail(tokenized_path)
+      for k, v in ipairs(child_params) do
         local p2 = copy(params)
         p2[v.param] = tokenized_path[1]
-        local f, bindings = resolve_rec(child_path, root[v], p2)
+        local f, bindings = resolve_rec(child_path, node[v], p2)
         if f then return f, bindings end
       end
     end
@@ -65,7 +65,7 @@ router.resolve = function(method, path)
 end
 
 router.execute = function(method, path)
-  local f, params = router.resolve(method, path)
+  local f,params = router.resolve(method, path)
   if f then
     return f(params)
   else
