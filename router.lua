@@ -20,15 +20,27 @@ function copy(t)
   return result
 end
 
--- gets all the available routes with wildcards from a given node
-local function collect_parameters_for(node)
-  local params = {}
+--[[
+Given this:
+
+    services = {
+      [{param = "id"}] = child1,
+      [{param = "service_id"}] = child2,
+      ...
+    }
+
+The call `get_children_with_parameters_for(services)` will return this:
+
+    { id = child1, service_id = child2 }
+]]
+local function get_children_with_parameters_for(node)
+  local children = {}
   for key, child in pairs(node) do
-    if type(key) == "table" and key.param then           -- params
-      params[#params + 1] = key
+    if type(key) == "table" and key.param then
+      children[key.param] = child
     end
   end
-  return params
+  return children
 end
 
 local function is_empty(t)
@@ -43,19 +55,21 @@ local function resolve_rec(tokenized_path, node, params)
   elseif node and node[tokenized_path[1]] then -- fixed string
     return resolve_rec(tail(tokenized_path), node[tokenized_path[1]], params)
   else
-    local child_params = collect_parameters_for(node)
-    if not is_empty(child_params) then
-      local child_path = tail(tokenized_path)
-      for k, v in ipairs(child_params) do
-        local p2 = copy(params)
-        p2[v.param] = tokenized_path[1]
-        local f, bindings = resolve_rec(child_path, node[v], p2)
-        if f then return f, bindings end
-      end
+    local children_with_parameters = get_children_with_parameters_for(node)
+    if is_empty(children_with_parameters) then return false end
+
+    local child_path = tail(tokenized_path)
+    for child_name, child in pairs(children_with_parameters) do
+      local child_params = copy(params)
+      child_params[child_name] = tokenized_path[1]
+      local f, bindings = resolve_rec(child_path, child, child_params)
+      if f then return f, bindings end
     end
   end
   return false
 end
+
+------------------------------ PUBLIC INTERFACE ------------------------------------
 
 router.leaf = {}
 router.compiled_routes = {}
