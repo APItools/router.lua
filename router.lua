@@ -80,13 +80,10 @@ end
 
 router.execute = function(method, path)
   local f,params = router.resolve(method, path)
-  if f then
-    return f(params)
-  else
-    router.default_action({})
-  end
+  if not f then return false end
+
+  f(params)
+  return true
 end
 
-router.default_action = function(params) ngx.exit(ngx.HTTP_NOT_FOUND) end
-
-return router                   --
+return router
