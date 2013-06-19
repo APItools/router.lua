@@ -16,13 +16,18 @@ describe("Router", function()
           [_LEAF] = write_dummy,
           ["s"] = {
             [_LEAF] = write_dummy,
+            ["a"] = {
+              ["b"] = {
+                [_LEAF] = write_dummy
+              }
+            },
             [{param = "id"}] = {
               [_LEAF] = write_dummy,
               ["foo"] = { [_LEAF] = "foo"}
             },
             [{param = "bar"}] = {
               ["bar"] = {
-                [_LEAF] = "bar/bar"
+                [_LEAF] = write_dummy
               }
             }
           }
@@ -57,10 +62,22 @@ describe("Router", function()
         assert.same(params, {id = "21"})
       end)
 
-      it("get with backtracking", function()
+      it("gets with backtracking over params", function()
         local f, params = router.resolve("get", "/s/21/bar")
-        assert.equals(f, 'bar/bar')
+        assert.equals(type(f), 'function')
         assert.same(params, {bar = "21"})
+      end)
+
+      it("gets with backtracking over fixed string", function()
+        local f, params = router.resolve("get", "/s/a/bar")
+        assert.equals(type(f), 'function')
+        assert.same(params, {bar = "a"})
+      end)
+
+      it("matches strings without backtracking", function()
+        local f, params = router.resolve("get", "/s/a/b")
+        assert.equals(type(f), 'function')
+        assert.same(params, {})
       end)
 
     end)

@@ -8,10 +8,10 @@ local function split(str, delimiter)
   return result
 end
 
-local function tail(t)
-  local result = {}
-  for i=2, #t do result[i-1] = t[i] end
-  return result
+local function get_head_and_tail(t)
+  local tail = {}
+  for i=2, #t do tail[i-1] = t[i] end
+  return t[1], tail
 end
 
 function copy(t)
@@ -22,22 +22,22 @@ end
 
 local function resolve_rec(remaining_path, node, params)
   if not node then return nil end
-  -- node is a leaf
+
+  -- node is a leaf and no remaining tokens; found end
   if #remaining_path == 0 then return node[router.leaf], params end
 
-  local child_path = tail(remaining_path)
+  local current_token, child_path = get_head_and_tail(remaining_path)
 
-  -- node is a matched fixed string
-  if node[remaining_path[1]] then return resolve_rec(child_path, node[remaining_path[1]], params) end
-
-  -- node is a params; this means it has children
   for key, child in pairs(node) do
-    if type(key) == "table" and key.param then
+    local f, bindings
+    if key == current_token then
+      f, bindings = resolve_rec(child_path, child, params)
+    elseif type(key) == "table" and key.param then
       local child_params = copy(params)
-      child_params[key.param] = remaining_path[1]
-      local f, bindings = resolve_rec(child_path, child, child_params)
-      if f then return f, bindings end
+      child_params[key.param] = current_token
+      f, bindings = resolve_rec(child_path, child, child_params)
     end
+    if f then return f, bindings end
   end
   return false
 end
