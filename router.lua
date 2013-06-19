@@ -42,6 +42,12 @@ local function resolve_rec(remaining_path, node, params)
   return false
 end
 
+local function find_param_key(node, param_name)
+  for key,_ in pairs(node) do
+    if type(key) == 'table' and key.param == param_name then return key end
+  end
+end
+
 ------------------------------ PUBLIC INTERFACE ------------------------------------
 
 router.leaf = {}
@@ -57,6 +63,29 @@ router.execute = function(method, path)
 
   f(params)
   return true
+end
+
+router.match = function(method, path, f)
+  router.compiled_routes[method] = router.compiled_routes[method] or {}
+  node = router.compiled_routes[method]
+  for _,token in ipairs(split(path, "/")) do
+    local key = token
+
+    local param_name = token:match("^:(.+)$")
+    if param_name then
+      key = find_param_key(node, param_name) or {param = param_name}
+    end
+
+    node[key] = node[key] or {}
+    node = node[key]
+  end
+  node[router.leaf] = f
+end
+
+for _,http_method in ipairs({'get', 'post', 'put', 'delete', 'trace', 'connect', 'options', 'head'}) do
+  router[http_method] = function(path, f) -- router.get = function(path, f)
+    router.match(http_method, path, f)    --   router.match('get', path, f)
+  end                                     -- end
 end
 
 return router
