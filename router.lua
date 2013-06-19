@@ -20,48 +20,21 @@ function copy(t)
   return result
 end
 
---[[
-Given this:
+local function resolve_rec(remaining_path, node, params)
+  if not node then return nil end
+  -- node is a leaf
+  if #remaining_path == 0 then return node[router.leaf], params end
 
-    services = {
-      [{param = "id"}] = child1,
-      [{param = "service_id"}] = child2,
-      ...
-    }
+  local child_path = tail(remaining_path)
 
-The call `get_children_with_parameters_for(services)` will return this:
+  -- node is a matched fixed string
+  if node[remaining_path[1]] then return resolve_rec(child_path, node[remaining_path[1]], params) end
 
-    { id = child1, service_id = child2 }
-]]
-local function get_children_with_parameters_for(node)
-  local children = {}
+  -- node is a params; this means it has children
   for key, child in pairs(node) do
     if type(key) == "table" and key.param then
-      children[key.param] = child
-    end
-  end
-  return children
-end
-
-local function is_empty(t)
-  return not next(t)
-end
-
-local function resolve_rec(tokenized_path, node, params)
-  if not node then
-    return nil
-  elseif #tokenized_path == 0 and node[router.leaf] then
-    return node[router.leaf], params
-  elseif node and node[tokenized_path[1]] then -- fixed string
-    return resolve_rec(tail(tokenized_path), node[tokenized_path[1]], params)
-  else
-    local children_with_parameters = get_children_with_parameters_for(node)
-    if is_empty(children_with_parameters) then return false end
-
-    local child_path = tail(tokenized_path)
-    for child_name, child in pairs(children_with_parameters) do
       local child_params = copy(params)
-      child_params[child_name] = tokenized_path[1]
+      child_params[key.param] = remaining_path[1]
       local f, bindings = resolve_rec(child_path, child, child_params)
       if f then return f, bindings end
     end
