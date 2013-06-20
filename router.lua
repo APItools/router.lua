@@ -42,10 +42,18 @@ local function resolve_rec(remaining_path, node, params)
   return false
 end
 
-local function find_param_key(node, param_name)
+local function find_key_for(token, node)
+  local param_name = token:match("^:(.+)$")
+  -- if token is not a param( it does not begin with :) then return the token
+  if not param_name then return token end
+
+  -- otherwise, it's a param, like :id. If it exists as a child of the node, we return it
   for key,_ in pairs(node) do
     if type(key) == 'table' and key.param == param_name then return key end
   end
+
+  -- otherwise, it's a new key to be inserted
+  return {param = param_name}
 end
 
 local function merge(dest, src)
@@ -75,20 +83,23 @@ router.execute = function(method, path, query_params)
 end
 
 router.match = function(method, path, f)
-  router.compiled_routes[method] = router.compiled_routes[method] or {}
-  node = router.compiled_routes[method]
-  for _,token in ipairs(split(path, "/")) do
-    local key = token
-
-    local param_name = token:match("^:(.+)$")
-    if param_name then
-      key = find_param_key(node, param_name) or {param = param_name}
+  if type(method) == 'table' then
+    local t = method
+    for method, routes in pairs(t) do
+      for path, f in pairs(routes) do
+        router.match(method, path, f)
+      end
     end
-
-    node[key] = node[key] or {}
-    node = node[key]
+  else
+    router.compiled_routes[method] = router.compiled_routes[method] or {}
+    node = router.compiled_routes[method]
+    for _,token in ipairs(split(path, "/")) do
+      local key = find_key_for(token, node)
+      node[key] = node[key] or {}
+      node = node[key]
+    end
+    node[router.leaf] = f
   end
-  node[router.leaf] = f
 end
 
 for _,http_method in ipairs({'get', 'post', 'put', 'delete', 'trace', 'connect', 'options', 'head'}) do

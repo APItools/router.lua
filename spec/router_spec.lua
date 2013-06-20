@@ -122,37 +122,79 @@ describe("Router", function()
         router.compiled_routes = {}
       end)
 
-      it("understands fixed strings", function()
-        router.match("get", "/foo", write_dummy)
-        assert.same(router.compiled_routes, {
-          get = { foo = { [_LEAF] = write_dummy } }
-        })
+      describe('when first param is a string', function()
+        it("understands fixed strings", function()
+          router.match("get", "/foo", write_dummy)
+          assert.same(router.compiled_routes, {
+            get = { foo = { [_LEAF] = write_dummy } }
+          })
+        end)
+
+        it("understands chained fixed strings", function()
+          router.match("get", "/foo/bar", write_dummy)
+          assert.same(router.compiled_routes, {
+            get = { foo = { bar = { [_LEAF] = write_dummy } } }
+          })
+        end)
+
+        it("understands params", function()
+          router.match("get", "/foo/:id", write_dummy)
+          local key, node = next(router.compiled_routes.get.foo)
+          assert.same(key, {param = "id"})
+          assert.same(node, { [_LEAF] = write_dummy })
+        end)
+
+        it("does not duplicate the same node twice for the same param id", function()
+          router.match("get", "/foo/:id/bar", write_dummy)
+          router.match("get", "/foo/:id/baz", write_dummy)
+          local key, node = next(router.compiled_routes.get.foo)
+          assert.same(key, {param = "id"})
+          assert.same(node, {
+            bar = {[_LEAF] = write_dummy },
+            baz = {[_LEAF] = write_dummy }
+          })
+        end)
       end)
 
-      it("understands chained fixed strings", function()
-        router.match("get", "/foo/bar", write_dummy)
-        assert.same(router.compiled_routes, {
-          get = { foo = { bar = { [_LEAF] = write_dummy } } }
-        })
+      describe('when first param is a table', function()
+        it("understands fixed strings", function()
+          router.match({ get = { ["/foo"] = write_dummy} })
+          assert.same(router.compiled_routes, {
+            get = { foo = { [_LEAF] = write_dummy } }
+          })
+        end)
+
+        it("understands chained fixed strings", function()
+          router.match({ get = { ["/foo/bar"] = write_dummy } })
+          assert.same(router.compiled_routes, {
+            get = { foo = { bar = { [_LEAF] = write_dummy } } }
+          })
+        end)
+
+        it("understands params", function()
+          router.match({get = {["/foo/:id"] = write_dummy}})
+          local key, node = next(router.compiled_routes.get.foo)
+          assert.same(key, {param = "id"})
+          assert.same(node, { [_LEAF] = write_dummy })
+        end)
+
+        it("does not duplicate the same node twice for the same param id", function()
+          router.match({
+            get = {
+              ["/foo/:id/bar"] = write_dummy,
+              ["/foo/:id/baz"] = write_dummy
+            }
+          })
+          local key, node = next(router.compiled_routes.get.foo)
+          assert.same(key, {param = "id"})
+          assert.same(node, {
+            bar = {[_LEAF] = write_dummy },
+            baz = {[_LEAF] = write_dummy }
+          })
+        end)
       end)
 
-      it("understands params", function()
-        router.match("get", "/foo/:id", write_dummy)
-        local key, node = next(router.compiled_routes.get.foo)
-        assert.same(key, {param = "id"})
-        assert.same(node, { [_LEAF] = write_dummy })
-      end)
 
-      it("does not duplicate the same node twice for the same param id", function()
-        router.match("get", "/foo/:id/bar", write_dummy)
-        router.match("get", "/foo/:id/baz", write_dummy)
-        local key, node = next(router.compiled_routes.get.foo)
-        assert.same(key, {param = "id"})
-        assert.same(node, {
-          bar = {[_LEAF] = write_dummy },
-          baz = {[_LEAF] = write_dummy }
-        })
-      end)
     end)
 
 
