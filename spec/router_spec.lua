@@ -101,6 +101,19 @@ describe("Router", function()
         assert.same(dummy.params, {id = '21'})
       end)
 
+      describe('when given extra parameters', function()
+
+        it("adds them to the params list", function()
+          router.execute("post", "/s/21", {bar = '22'})
+          assert.same(dummy.params, {id = '21', bar = '22'})
+        end)
+
+        it("overrides with post params", function()
+          router.execute("post", "/s/21", {id = '22'})
+          assert.same(dummy.params, {id = '22'})
+        end)
+      end)
+
     end)
 
 
@@ -140,8 +153,8 @@ describe("Router", function()
           baz = {[_LEAF] = write_dummy }
         })
       end)
-
     end)
+
 
   end)
 end)

@@ -48,6 +48,13 @@ local function find_param_key(node, param_name)
   end
 end
 
+local function merge(dest, src)
+  if not src then return end
+  for k,v in pairs(src) do
+    dest[k] = tostring(v)
+  end
+end
+
 ------------------------------ PUBLIC INTERFACE ------------------------------------
 
 router.leaf = {}
@@ -57,9 +64,11 @@ router.resolve = function(method, path)
   return resolve_rec(split(path, "/"),  router.compiled_routes[method] , {})
 end
 
-router.execute = function(method, path)
+router.execute = function(method, path, query_params)
   local f,params = router.resolve(method, path)
   if not f then return false end
+
+  merge(params, query_params)
 
   f(params)
   return true
