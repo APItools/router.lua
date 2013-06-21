@@ -28,17 +28,24 @@ local function resolve_rec(remaining_path, node, params)
 
   local current_token, child_path = get_head_and_tail(remaining_path)
 
+  -- always resolve static strings first
   for key, child in pairs(node) do
-    local f, bindings
     if key == current_token then
-      f, bindings = resolve_rec(child_path, child, params)
-    elseif type(key) == "table" and key.param then
+      local f, bindings = resolve_rec(child_path, child, params)
+      if f then return f, bindings end
+    end
+  end
+
+  -- then resolve parameters
+  for key, child in pairs(node) do
+    if type(key) == "table" and key.param then
       local child_params = copy(params)
       child_params[key.param] = current_token
-      f, bindings = resolve_rec(child_path, child, child_params)
+      local f, bindings = resolve_rec(child_path, child, child_params)
+      if f then return f, bindings end
     end
-    if f then return f, bindings end
   end
+
   return false
 end
 

@@ -17,7 +17,8 @@ describe("Router", function()
       router.match( {
         get = {
           ["/s"]          = write_dummy,
-          ["/s/a/b"]        = write_dummy,
+          ["/s/a/b"]      = write_dummy,
+          ["/s/c"]        = write_dummy,
           ["/s/:id"]      = write_dummy,
           ["/s/:id/foo"]  = write_dummy,
           ["/s/:bar/bar"] = write_dummy
@@ -64,6 +65,12 @@ describe("Router", function()
         local f, params = router.resolve("get", "/s/a/b")
         assert.equals(type(f), 'function')
         assert.same(params, {})
+      end)
+
+      it("priorizes static variables over params", function()
+        local f, p = router.resolve("get", "/s/c")
+        assert.equals(type(f), 'function')
+        assert.same(p, {})
       end)
 
     end)
