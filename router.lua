@@ -63,6 +63,17 @@ local function merge(dest, src)
   end
 end
 
+local function match_one_path(method, path, f)
+  router.compiled_routes[method] = router.compiled_routes[method] or {}
+  node = router.compiled_routes[method]
+  for _,token in ipairs(split(path, "/")) do
+    local key = find_key_for(token, node)
+    node[key] = node[key] or {}
+    node = node[key]
+  end
+  node[router.leaf] = f
+end
+
 ------------------------------ PUBLIC INTERFACE ------------------------------------
 
 router.leaf = {}
@@ -87,18 +98,11 @@ router.match = function(method, path, f)
     local t = method
     for method, routes in pairs(t) do
       for path, f in pairs(routes) do
-        router.match(method, path, f)
+        match_one_path(method, path, f)
       end
     end
   else
-    router.compiled_routes[method] = router.compiled_routes[method] or {}
-    node = router.compiled_routes[method]
-    for _,token in ipairs(split(path, "/")) do
-      local key = find_key_for(token, node)
-      node[key] = node[key] or {}
-      node = node[key]
-    end
-    node[router.leaf] = f
+    match_one_path(method, path, f)
   end
 end
 
