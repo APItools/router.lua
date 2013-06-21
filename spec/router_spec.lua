@@ -1,4 +1,4 @@
-local router = require 'router'
+local router = require 'lib.router'
 
 describe("Router", function()
   local dummy
@@ -13,35 +13,19 @@ describe("Router", function()
   describe("when given a compiled routes tree", function()
 
     before_each(function ()
-      router.compiled_routes = {
+      router.compiled_routes = {}
+      router.match( {
         get = {
-          [_LEAF] = write_dummy,
-          ["s"] = {
-            [_LEAF] = write_dummy,
-            ["a"] = {
-              ["b"] = {
-                [_LEAF] = write_dummy
-              }
-            },
-            [{param = "id"}] = {
-              [_LEAF] = write_dummy,
-              ["foo"] = { [_LEAF] = "foo"}
-            },
-            [{param = "bar"}] = {
-              ["bar"] = {
-                [_LEAF] = write_dummy
-              }
-            }
-          }
+          ["/s"]          = write_dummy,
+          ["/s/a/b"]        = write_dummy,
+          ["/s/:id"]      = write_dummy,
+          ["/s/:id/foo"]  = write_dummy,
+          ["/s/:bar/bar"] = write_dummy
         },
         post = {
-          ["s"] = {
-            [{param = "id"}] = {
-              [_LEAF] = write_dummy
-            }
-          }
+          ["/s/:id"] = write_dummy
         }
-      }
+      })
     end)
 
     describe(".resolve", function()
