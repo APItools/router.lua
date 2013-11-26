@@ -2,7 +2,8 @@ local router = {}
 
 local function split(str, delimiter)
   local result = {}
-  for chunk in str:gmatch("[^/]+") do
+  delimiter = delimiter or " "
+  for chunk in str:gmatch("[^".. delimiter .. "]+") do
     result[#result + 1] = chunk
   end
   return result
