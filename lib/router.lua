@@ -43,7 +43,7 @@ local function get_head_and_tail(t)
   return t[1], tail
 end
 
-function copy(t)
+local function copy(t)
   local result = {}
   for k,v in pairs(t) do result[k] = v end
   return result
