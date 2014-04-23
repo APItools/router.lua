@@ -9,25 +9,69 @@ Features:
 * Parses parameters like `/app/services/:service_id`
 * It's platform-agnostic. It has been tested with openresty.
 
-Example of use
-==============
+Usage
+=====
 
-    local router = require 'router'
+Creating a router:
 
-    router.get('/hello',       function()       print('someone said hello') end)
-    router.get('/hello/:name', function(params) print('hello ' .. params.name) end)
+``` lua
+local router = require 'router'
 
-    router.post('/app/:id/comments', function(params) print('comment ' .. params.comment .. ' created on app ' .. params.id))
+local r = router.new()
+```
 
-    router.execute('get',  '/hello')
-    -- someone said hello
+Defining routes and actions:
 
-    router.execute('get',  '/hello/peter')
-    -- hello peter
+``` lua
+r:get('/hello', function(params)
+  print('someone said hello')
+end)
 
-    router.execute('post', '/app/4/comments', { comment = 'fascinating'})
-    -- comment fascinating created on app 4
+-- alternative way:
+r:match('get', '/hello', function(params)
+  print('someone said hello')
+end)
 
+-- route parameters
+r:get('/hello/:name', function(params)
+  print('hello, ' .. params.name)
+end)
+
+-- extra parameters (i.e. from a query or form)
+r:post('/app/:id/comments', function(params)
+  print('comment ' .. params.comment .. ' created on app ' .. params.id)
+end)
+
+-- equivalent to all of the above:
+r:match({
+  get = {
+    ['/hello']       = function(params) print('someone said hello') end,
+    ['/hello/:name'] = function(params) print('hello, ' .. params.name) end
+  },
+  post = {
+    ['/app/:id/comments'] = function(params)
+      print('comment ' .. params.comment .. ' created on app ' .. params.id)
+    end
+  }
+})
+
+```
+
+Executing routes:
+
+``` lua
+r:execute('get',  '/hello')
+-- someone said hello
+
+r:execute('get',  '/hello/peter')
+-- hello peter
+
+r:execute('post', '/app/4/comments', { comment = 'fascinating'})
+-- comment fascinating created on app 4
+```
+
+`r:execute` returns either `nil` followed by an error message if no routes where found, or `true` and
+whatever the matched action returned.
 
 License
 =======
