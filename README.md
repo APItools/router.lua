@@ -76,7 +76,7 @@ whatever the matched action returned.
 License
 =======
 
-MIT licenxe
+MIT license
 
 Specs
 =====
