@@ -1,4 +1,4 @@
-local router = require 'lib.router'
+local router = require 'router'
 
 describe("Router", function()
   local dummy
