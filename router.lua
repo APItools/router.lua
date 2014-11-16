@@ -17,19 +17,21 @@ local function match_one_path(self, method, path, f)
   node["LEAF"] = f
 end
 
-local function resolve( it, node, params)
-  local token = it() 
-  
+local function resolve( path, node, params)
+  local _, _, token, path = path:find("([^/]+)(.*)")
   if not token then return node["LEAF"], params end
 
   for key, child in pairs(node) do
-    if key == token then return resolve(it, child, params) end
+    if key == token then 
+      local f, bindings = resolve(path, child, params) 
+      if f then return f, bindings end
+    end
   end
 
   for key, child in pairs(node) do
     if key:byte(1) == 58 then
       params[key:sub(2)] = token
-      local f, bindings = resolve(it, child, params)
+      local f, bindings = resolve(path, child, params)
       if f then return f, bindings end
       params[key:sub(2)] = nil
     end
@@ -42,7 +44,7 @@ end
 local Router = {}
 
 function Router:resolve(method, path)
-  return resolve(path:gmatch("([^/]+)"), self._tree[method] , {})
+  return resolve(path, self._tree[method] , {})
 end
 
 function Router:execute(method, path, query_params)

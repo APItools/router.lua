@@ -1,6 +1,6 @@
 local router = require 'router'
 
-local LEAF = router._LEAF
+local LEAF = "LEAF"
 
 describe("Router", function()
   local r
@@ -31,7 +31,7 @@ describe("Router", function()
       it("understands params", function()
         r:match("get", "/foo/:id", write_dummy)
         local key, node = next(r._tree.get.foo)
-        assert.same(key, {param = "id"})
+        assert.same(key, ":id")
         assert.same(node, { [LEAF] = write_dummy })
       end)
 
@@ -39,7 +39,7 @@ describe("Router", function()
         r:match("get", "/foo/:id/bar", write_dummy)
         r:match("get", "/foo/:id/baz", write_dummy)
         local key, node = next(r._tree.get.foo)
-        assert.same(key, {param = "id"})
+        assert.same(key, ":id")
         assert.same(node, {
           bar = {[LEAF] = write_dummy },
           baz = {[LEAF] = write_dummy }
@@ -65,7 +65,7 @@ describe("Router", function()
       it("understands params", function()
         r:match({get = {["/foo/:id"] = write_dummy}})
         local key, node = next(r._tree.get.foo)
-        assert.same(key, {param = "id"})
+        assert.same(key, ":id")
         assert.same(node, { [LEAF] = write_dummy })
       end)
 
@@ -77,7 +77,7 @@ describe("Router", function()
           }
         })
         local key, node = next(r._tree.get.foo)
-        assert.same(key, {param = "id"})
+        assert.same(key, ":id")
         assert.same(node, {
           bar = {[LEAF] = write_dummy },
           baz = {[LEAF] = write_dummy }
