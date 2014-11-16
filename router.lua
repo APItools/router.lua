@@ -1,12 +1,5 @@
 local router = {}
 
-local function table_merge(dest, src)
-  if not src then return end
-  for k,v in pairs(src) do
-    dest[k] = tostring(v)
-  end
-end
-
 local function match_one_path(self, method, path, f)
   self._tree[method] = self._tree[method] or {}
   local node = self._tree[method]
@@ -43,15 +36,13 @@ end
 
 local Router = {}
 
-function Router:resolve(method, path)
-  return resolve(path, self._tree[method] , {})
+function Router:resolve(method, path, params)
+  return resolve(path, self._tree[method] , params or {})
 end
 
 function Router:execute(method, path, query_params)
-  local f,params = self:resolve(method, path)
+  local f,params = self:resolve(method, path, query_params)
   if not f then return nil, ('Could not resolve %s %s'):format(method, path) end
-
-  table_merge(params, query_params)
 
   return true, f(params)
 end

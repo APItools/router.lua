@@ -174,11 +174,11 @@ describe("Router", function()
           r:execute("post", "/s/21", {bar = '22'})
           assert.same(dummy.params, {id = '21', bar = '22'})
         end)
-
-        it("overrides with post params", function()
-          r:execute("post", "/s/21", {id = '22'})
-          assert.same(dummy.params, {id = '22'})
-        end)
+        -- no need to override the params
+        --it("overrides with post params", function()
+        --  r:execute("post", "/s/21", {id = '22'})
+        --  assert.same(dummy.params, {id = '22'})
+        --end)
       end)
     end) -- :execute
   end) -- default params
