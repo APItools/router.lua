@@ -1,8 +1,6 @@
 local router = {}
 
-local function match_one_path(self, method, path, f)
-  self._tree[method] = self._tree[method] or {}
-  local node = self._tree[method]
+local function match_one_path(node, method, path, f)
   for token in path:gmatch("([^/]+)") do
     node[token] = node[token] or {}
     node = node[token]
@@ -52,11 +50,13 @@ function Router:match(method, path, f)
     local t = method
     for method, routes in pairs(t) do
       for path, f in pairs(routes) do
-        match_one_path(self, method, path, f)
+        self:match(method, path, f)
       end
     end
   else
-    match_one_path(self, method, path, f)
+    self._tree[method] = self._tree[method] or {}
+    local node = self._tree[method]
+    match_one_path(node, method, path, f)
   end
 end
 
