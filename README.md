@@ -1,6 +1,8 @@
 router.lua
 ==========
 
+[![Build Status](https://travis-ci.org/APItools/router.lua.svg)](https://travis-ci.org/APItools/router.lua)
+
 A very basic router for lua.
 
 Features:
