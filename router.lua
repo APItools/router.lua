@@ -103,7 +103,7 @@ end
 local function match_one_path(self, method, path, f)
   self._tree[method] = self._tree[method] or {}
   local node = self._tree[method]
-  for _,token in ipairs(split(path, "/")) do
+  for _,token in ipairs(split(path, "/|.")) do
     local key = find_key_for(token, node)
     node[key] = node[key] or {}
     node = node[key]
@@ -116,7 +116,7 @@ end
 local Router = {}
 
 function Router:resolve(method, path)
-  return resolve_rec(split(path, "/"),  self._tree[method] , {})
+  return resolve_rec(split(path, "/|."),  self._tree[method] , {})
 end
 
 function Router:execute(method, path, query_params)
