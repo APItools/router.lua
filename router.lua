@@ -36,7 +36,7 @@ local function match_one_path(node, method, path, f)
   node["LEAF"] = f
 end
 
-local function resolve( path, node, params)
+local function resolve(path, node, params)
   local _, _, current_token, path = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
 
@@ -49,12 +49,14 @@ local function resolve( path, node, params)
 
   for child_token, child_node in pairs(node) do
     if child_token:byte(1) == 58 then
-      local token = child_token:sub(2)
-      local value = params[token]
-      params[token] = value or current_token -- store the value in params, resolve tail path
+      local param_name = child_token:sub(2)
+      local param_value = params[param_name]
+      params[param_name] = param_value or current_token -- store the value in params, resolve tail path
+
       local f, bindings = resolve(path, child_node, params)
       if f then return f, bindings end
-      params[token] = value -- reset the params table.
+
+      params[param_name] = param_value -- reset the params table.
     end
   end
 
