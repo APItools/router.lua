@@ -29,30 +29,34 @@ local router = {
 }
 
 local function match_one_path(node, method, path, f)
-  for token in path:gmatch("([^/.]+)") do
-    node[token] = node[token] or {}
-    node = node[token]
+  -- match the token or placeholder stored in var "tp"
+  for tp in path:gmatch("([^/.]+)") do
+    node[tp] = node[tp] or {}
+    node = node[tp]
   end
   node["LEAF"] = f
 end
 
 local function resolve( path, node, params)
-  local _, _, token, path = path:find("([^/.]+)(.*)")
-  if not token then return node["LEAF"], params end
+  -- match the token or value stored in var "tv"
+  local _, _, tv, path = path:find("([^/.]+)(.*)")
+  if not tv then return node["LEAF"], params end
 
-  for key, child in pairs(node) do
-    if key == token then 
-      local f, bindings = resolve(path, child, params) 
+  for tp, child in pairs(node) do
+    -- if "token_or_placeholder" equal "token_or_value", it's must be token
+    if tp == tv then
+      local f, bindings = resolve(path, child, params)
       if f then return f, bindings end
     end
   end
-  for key, child in pairs(node) do
-    if key:byte(1) == 58 then
-      local k, t = key:sub(2), params[k]
-      params[k] = params[k] or token
+  for tp, child in pairs(node) do
+    if tp:byte(1) == 58 then -- the placeholder start with ":" (ascii is 58)
+      local token = tp:sub(2)
+      local value = params[token]
+      params[token] = value or tv -- store the value in params, resolve tail path
       local f, bindings = resolve(path, child, params)
       if f then return f, bindings end
-      params[k] = t or nil
+      params[token] = value -- reset the params table.
     end
   end
   return false
@@ -68,22 +72,18 @@ end
 function Router:execute(method, path, query_params)
   local f,params = self:resolve(method, path, query_params)
   if not f then return nil, ('Could not resolve %s %s'):format(method, path) end
-
   return true, f(params)
 end
 
 function Router:match(method, path, f)
-  if type(method) == 'table' then
-    local t = method
-    for method, routes in pairs(t) do
-      for path, f in pairs(routes) do
-        self:match(method, path, f)
-      end
+  if type(method) == 'string' then -- always make the method to table.
+    method = {[method] = {[path] = f}}
+  end
+  for m, routes in pairs(method) do
+    for path, f in pairs(routes) do
+      if not self._tree[m] then self._tree[m] = {} end
+      match_one_path(self._tree[m], method, path, f)
     end
-  else
-    self._tree[method] = self._tree[method] or {}
-    local node = self._tree[method]
-    match_one_path(node, method, path, f)
   end
 end
 
