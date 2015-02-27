@@ -17,7 +17,7 @@ local router = {
 
     The above table_copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
- 
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -29,36 +29,35 @@ local router = {
 }
 
 local function match_one_path(node, method, path, f)
-  -- match the token or placeholder stored in var "tp"
-  for tp in path:gmatch("([^/.]+)") do
-    node[tp] = node[tp] or {}
-    node = node[tp]
+  for token in path:gmatch("([^/.]+)") do
+    node[token] = node[token] or {}
+    node = node[token]
   end
   node["LEAF"] = f
 end
 
 local function resolve( path, node, params)
-  -- match the token or value stored in var "tv"
-  local _, _, tv, path = path:find("([^/.]+)(.*)")
-  if not tv then return node["LEAF"], params end
+  local _, _, current_token, path = path:find("([^/.]+)(.*)")
+  if not current_token then return node["LEAF"], params end
 
-  for tp, child in pairs(node) do
-    -- if "token_or_placeholder" equal "token_or_value", it's must be token
-    if tp == tv then
-      local f, bindings = resolve(path, child, params)
+  for child_token, child_node in pairs(node) do
+    if child_token == current_token then
+      local f, bindings = resolve(path, child_node, params)
       if f then return f, bindings end
     end
   end
-  for tp, child in pairs(node) do
-    if tp:byte(1) == 58 then -- the placeholder start with ":" (ascii is 58)
-      local token = tp:sub(2)
+
+  for child_token, child_node in pairs(node) do
+    if child_token:byte(1) == 58 then
+      local token = child_token:sub(2)
       local value = params[token]
-      params[token] = value or tv -- store the value in params, resolve tail path
-      local f, bindings = resolve(path, child, params)
+      params[token] = value or current_token -- store the value in params, resolve tail path
+      local f, bindings = resolve(path, child_node, params)
       if f then return f, bindings end
       params[token] = value -- reset the params table.
     end
   end
+
   return false
 end
 
