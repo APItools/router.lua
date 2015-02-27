@@ -46,10 +46,11 @@ local function resolve( path, node, params)
   end
   for key, child in pairs(node) do
     if key:byte(1) == 58 then
-      params[key:sub(2)] = token
+      local k, t = key:sub(2), params[k]
+      params[k] = params[k] or token
       local f, bindings = resolve(path, child, params)
       if f then return f, bindings end
-      params[key:sub(2)] = nil
+      params[k] = t or nil
     end
   end
   return false
