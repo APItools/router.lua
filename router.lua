@@ -29,7 +29,7 @@ local router = {
 }
 
 local function match_one_path(node, method, path, f)
-  for token in path:gmatch("([^/.]+)") do
+  for token in path:gmatch("[^/.]+") do
     node[token] = node[token] or {}
     node = node[token]
   end
