@@ -1,7 +1,33 @@
-local router = {}
+local router = {
+  _VERSION     = 'router.lua v1.0.0',
+  _DESCRIPTION = 'A simple router for Lua',
+  _LICENSE     = [[
+    MIT LICENSE
+
+    * table_copyright (c) 2013 Enrique García Cota
+    * table_copyright (c) 2013 Raimon Grau
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    table_copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, table_copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+    The above table_copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR table_copyRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  ]]
+}
 
 local function match_one_path(node, method, path, f)
-  for token in path:gmatch("([^/]+)") do
+  for token in path:gmatch("([^/.]+)") do
     node[token] = node[token] or {}
     node = node[token]
   end
@@ -9,7 +35,7 @@ local function match_one_path(node, method, path, f)
 end
 
 local function resolve( path, node, params)
-  local _, _, token, path = path:find("([^/]+)(.*)")
+  local _, _, token, path = path:find("([^/.]+)(.*)")
   if not token then return node["LEAF"], params end
 
   for key, child in pairs(node) do
@@ -18,7 +44,6 @@ local function resolve( path, node, params)
       if f then return f, bindings end
     end
   end
-
   for key, child in pairs(node) do
     if key:byte(1) == 58 then
       params[key:sub(2)] = token
@@ -31,7 +56,6 @@ local function resolve( path, node, params)
 end
 
 ------------------------------ INSTANCE METHODS ------------------------------------
-
 local Router = {}
 
 function Router:resolve(method, path, params)
@@ -67,8 +91,8 @@ for _,http_method in ipairs({'get', 'post', 'put', 'delete', 'trace', 'connect',
 end
 
 local router_mt = { __index = Router }
------------------------------- PUBLIC INTERFACE ------------------------------------
 
+------------------------------ PUBLIC INTERFACE ------------------------------------
 router.new = function()
   return setmetatable({ _tree = {} }, router_mt)
 end

@@ -45,6 +45,15 @@ describe("Router", function()
           baz = {[LEAF] = write_dummy }
         })
       end)
+
+      it("supports an extension on a param", function()
+        r:match("get", "/foo/:id.json", write_dummy)
+        local key, node = next(r._tree.get.foo)
+        assert.same(key, ":id")
+        assert.same(node, {
+          json = {[LEAF] = write_dummy }
+        })
+      end)
     end)
 
     describe('when first param is a table', function()
@@ -83,6 +92,19 @@ describe("Router", function()
           baz = {[LEAF] = write_dummy }
         })
       end)
+
+      it("supports an extension on a param", function()
+        r:match({
+          get = {
+            ["/foo/:id.json"] = write_dummy
+          }
+        })
+        local key, node = next(r._tree.get.foo)
+        assert.same(key, ":id")
+        assert.same(node, {
+          json = {[LEAF] = write_dummy }
+        })
+      end)
     end)
   end)
 
@@ -97,10 +119,12 @@ describe("Router", function()
           ["/s/c"]        = write_dummy,
           ["/s/:id"]      = write_dummy,
           ["/s/:id/foo"]  = write_dummy,
-          ["/s/:bar/bar"] = write_dummy
+          ["/s/:bar/bar"] = write_dummy,
+          ["/s/:id.json"] = write_dummy
         },
         post = {
-          ["/s/:id"] = write_dummy
+          ["/s/:id"] = write_dummy,
+          ["/s/:id.json"] = write_dummy
         }
       })
     end)
@@ -121,6 +145,18 @@ describe("Router", function()
 
       it("posts params", function()
         local f, params = r:resolve("post", "/s/21")
+        assert.equals(type(f), 'function')
+        assert.same(params, {id = "21"})
+      end)
+
+      it("gets params with an extension", function()
+        local f, params = r:resolve("get", "/s/21.json")
+        assert.equals(type(f), 'function')
+        assert.same(params, {id = "21"})
+      end)
+
+      it("posts params with an extension", function()
+        local f, params = r:resolve("post", "/s/21.json")
         assert.equals(type(f), 'function')
         assert.same(params, {id = "21"})
       end)
@@ -163,8 +199,18 @@ describe("Router", function()
         assert.same(dummy.params, {id = '21'})
       end)
 
+      it("runs the specified function with a param with an extension", function()
+        r:execute("get", "/s/21.json")
+        assert.same(dummy.params, {id = '21'})
+      end)
+
       it("runs the specified function with a param in a post", function()
         r:execute("post", "/s/21")
+        assert.same(dummy.params, {id = '21'})
+      end)
+
+      it("runs the specified function with a param in a post with an extension", function()
+        r:execute("post", "/s/21.json")
         assert.same(dummy.params, {id = '21'})
       end)
 
