@@ -63,11 +63,20 @@ local function resolve(path, node, params)
   return false
 end
 
+local function copy(t, visited)
+  if type(t) ~= 'table' then return t end
+  if visited[t] then return visited[t] end
+  local result = {}
+  for k,v in pairs(t) do result[copy(k)] = copy(v) end
+  visited[t] = result
+  return result
+end
+
 ------------------------------ INSTANCE METHODS ------------------------------------
 local Router = {}
 
 function Router:resolve(method, path, params)
-  return resolve(path, self._tree[method] , params or {})
+  return resolve(path, self._tree[method] , copy(params or {}, {}))
 end
 
 function Router:execute(method, path, query_params)
