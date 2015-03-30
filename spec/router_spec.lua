@@ -60,9 +60,9 @@ describe("Router", function()
 
       it("understands chained fixed strings", function()
         r:match({ get = { ["/foo/bar"] = write_dummy } })
-        assert.same(r._tree, {
-          get = { foo = { bar = { [LEAF] = write_dummy } } }
-        })
+
+        r:execute("get", "/foo/bar", "ok")
+        assert.same(dummy.params, "ok")
       end)
 
       it("understands params", function()
