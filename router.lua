@@ -29,6 +29,8 @@ local router = {
   ]]
 }
 
+local COLON_BYTE = string.byte(':', 1)
+
 local function match_one_path(node, method, path, f)
   for token in path:gmatch("[^/.]+") do
     node[token] = node[token] or {}
@@ -49,7 +51,7 @@ local function resolve(path, node, params)
   end
 
   for child_token, child_node in pairs(node) do
-    if child_token:byte(1) == 58 then
+    if child_token:byte(1) == COLON_BYTE then -- token begins with ':'
       local param_name = child_token:sub(2)
       local param_value = params[param_name]
       params[param_name] = param_value or current_token -- store the value in params, resolve tail path
