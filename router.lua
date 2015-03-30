@@ -1,5 +1,5 @@
 local router = {
-  _VERSION     = 'router.lua v1.0.0',
+  _VERSION     = 'router.lua v1.0.1',
   _DESCRIPTION = 'A simple router for Lua',
   _LICENSE     = [[
     MIT LICENSE
