@@ -4,24 +4,25 @@ local router = {
   _LICENSE     = [[
     MIT LICENSE
 
-    * table_copyright (c) 2013 Enrique García Cota
-    * table_copyright (c) 2013 Raimon Grau
+    * Copyright (c) 2013 Enrique García Cota
+    * Copyright (c) 2013 Raimon Grau
+    * Copyright (c) 2015 Lloyd Zhou
 
     Permission is hereby granted, free of charge, to any person obtaining a
-    table_copy of this software and associated documentation files (the
+    copy of this software and associated documentation files (the
     "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, table_copy, modify, merge, publish,
+    without limitation the rights to use, copy, modify, merge, publish,
     distribute, sublicense, and/or sell copies of the Software, and to
     permit persons to whom the Software is furnished to do so, subject to
     the following conditions:
 
-    The above table_copyright notice and this permission notice shall be included
+    The above copyright notice and this permission notice shall be included
     in all copies or substantial portions of the Software.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR table_copyRIGHT HOLDERS BE LIABLE FOR ANY
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
