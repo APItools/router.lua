@@ -70,7 +70,7 @@ local function copy(t, visited)
   if type(t) ~= 'table' then return t end
   if visited[t] then return visited[t] end
   local result = {}
-  for k,v in pairs(t) do result[copy(k)] = copy(v) end
+  for k,v in pairs(t) do result[copy(k)] = copy(v, visited) end
   visited[t] = result
   return result
 end
