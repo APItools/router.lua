@@ -20,18 +20,24 @@ local router = require 'router'
 local r = router.new()
 ```
 
-Defining routes and actions:
+You can define a route with `r:match`:
 
 ``` lua
 local router = require 'router'
 local r = router.new()
 
-r:get('/hello', function(params)
+r:match('get', '/hello', function(params)
   print('someone said hello')
 end)
+```
 
--- alternative way:
-r:match('get', '/hello', function(params)
+You can use `r:get(...)` instead of `r:match('get', ...)`. There are similar shortcuts for the usual http verbs (`r:post`, `r:put`, `r:delete` ...):
+
+```
+local router = require 'router'
+local r = router.new()
+
+r:get('/hello', function(params)
   print('someone said hello')
 end)
 
@@ -46,7 +52,8 @@ r:post('/app/:id/comments', function(params)
 end)
 ```
 
-Once the routes are defined, you can trigger their actions by using `r:execute`:
+Once the routes are defined, you can trigger their actions by using `r:execute`.
+Given the 3 routes above, execute will work like this:
 
 ``` lua
 r:execute('get',  '/hello')
@@ -62,7 +69,7 @@ r:execute('post', '/app/4/comments', { comment = 'fascinating'})
 `r:execute` returns either `nil` followed by an error message if no routes where found, or `true` and
 whatever the matched action returned.
 
-If you are defining lots of routes in one go, there is a more compact syntax to do so using a table.
+If you are defining lots of routes in one go, there is an extra-compact syntax to do so using a table.
 The following code is equivalent to the previous one:
 
 ``` lua
