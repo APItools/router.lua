@@ -14,17 +14,18 @@ Features:
 Usage
 =====
 
-Creating a router:
-
+A router is created with `router.new`:
 ``` lua
 local router = require 'router'
-
 local r = router.new()
 ```
 
 Defining routes and actions:
 
 ``` lua
+local router = require 'router'
+local r = router.new()
+
 r:get('/hello', function(params)
   print('someone said hello')
 end)
@@ -43,8 +44,31 @@ end)
 r:post('/app/:id/comments', function(params)
   print('comment ' .. params.comment .. ' created on app ' .. params.id)
 end)
+```
 
--- equivalent to all of the above:
+Once the routes are defined, you can trigger their actions by using `r:execute`:
+
+``` lua
+r:execute('get',  '/hello')
+-- prints "someone said hello"
+
+r:execute('get',  '/hello/peter')
+-- prints "hello peter"
+
+r:execute('post', '/app/4/comments', { comment = 'fascinating'})
+-- prints "comment fascinating created on app 4"
+```
+
+`r:execute` returns either `nil` followed by an error message if no routes where found, or `true` and
+whatever the matched action returned.
+
+If you are defining lots of routes in one go, there is a more compact syntax to do so using a table.
+The following code is equivalent to the previous one:
+
+``` lua
+local router = require 'router'
+local r = router.new()
+
 r:match({
   get = {
     ['/hello']       = function(params) print('someone said hello') end,
@@ -57,23 +81,10 @@ r:match({
   }
 })
 
-```
-
-Executing routes:
-
-``` lua
 r:execute('get',  '/hello')
--- someone said hello
-
 r:execute('get',  '/hello/peter')
--- hello peter
-
 r:execute('post', '/app/4/comments', { comment = 'fascinating'})
--- comment fascinating created on app 4
 ```
-
-`r:execute` returns either `nil` followed by an error message if no routes where found, or `true` and
-whatever the matched action returned.
 
 License
 =======
