@@ -101,9 +101,9 @@ function Router:match(method, path, f)
 end
 
 for _,http_method in ipairs({'get', 'post', 'put', 'delete', 'trace', 'connect', 'options', 'head'}) do
-  Router[http_method] = function(self, path, f) -- Router.get = function(self, path, f)
-    return self:match(http_method, path, f)     --   return self:match('get', path, f)
-  end                                           -- end
+  Router[http_method] = function(self, path, f)     -- Router.get = function(self, path, f)
+    return self:match(http_method:upper(), path, f) --   return self:match('GET', path, f)
+  end                                               -- end
 end
 
 local router_mt = { __index = Router }

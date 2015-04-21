@@ -26,12 +26,14 @@ You can define a route with `r:match`:
 local router = require 'router'
 local r = router.new()
 
-r:match('get', '/hello', function(params)
+r:match('GET', '/hello', function(params)
   print('someone said hello')
 end)
 ```
 
-You can use `r:get(...)` instead of `r:match('get', ...)`. There are similar shortcuts for the usual http verbs (`r:post`, `r:put`, `r:delete` ...):
+You can use `r:get(...)` instead of `r:match('GET', ...)`. There are similar shortcuts for the usual http verbs (`r:post`, `r:put`, `r:delete` ...).
+
+In addition to that, `router.lua` supports router parameters (like `/users/:id/comment`) and extra parameters (which come from outside the route).
 
 ```
 local router = require 'router'
@@ -56,13 +58,13 @@ Once the routes are defined, you can trigger their actions by using `r:execute`.
 Given the 3 routes above, execute will work like this:
 
 ``` lua
-r:execute('get',  '/hello')
+r:execute('GET',  '/hello')
 -- prints "someone said hello"
 
-r:execute('get',  '/hello/peter')
+r:execute('GET',  '/hello/peter')
 -- prints "hello peter"
 
-r:execute('post', '/app/4/comments', { comment = 'fascinating'})
+r:execute('POST', '/app/4/comments', { comment = 'fascinating'})
 -- prints "comment fascinating created on app 4"
 ```
 
@@ -77,20 +79,20 @@ local router = require 'router'
 local r = router.new()
 
 r:match({
-  get = {
+  GET = {
     ['/hello']       = function(params) print('someone said hello') end,
     ['/hello/:name'] = function(params) print('hello, ' .. params.name) end
   },
-  post = {
+  POST = {
     ['/app/:id/comments'] = function(params)
       print('comment ' .. params.comment .. ' created on app ' .. params.id)
     end
   }
 })
 
-r:execute('get',  '/hello')
-r:execute('get',  '/hello/peter')
-r:execute('post', '/app/4/comments', { comment = 'fascinating'})
+r:execute('GET',  '/hello')
+r:execute('GET',  '/hello/peter')
+r:execute('POST', '/app/4/comments', { comment = 'fascinating'})
 ```
 
 License
