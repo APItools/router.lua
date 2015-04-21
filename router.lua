@@ -79,12 +79,14 @@ end
 local Router = {}
 
 function Router:resolve(method, path, params)
-  return resolve(path, self._tree[method] , copy(params or {}, {}))
+  local node = self._tree[method]
+  if not node then return nil, ("Unknown method: %s"):format(method) end
+  return resolve(path, node , copy(params or {}, {}))
 end
 
 function Router:execute(method, path, query_params)
   local f,params = self:resolve(method, path, query_params)
-  if not f then return nil, ('Could not resolve %s %s'):format(method, path) end
+  if not f then return nil, ('Could not resolve %s %s - %s'):format(method, path, params) end
   return true, f(params)
 end
 

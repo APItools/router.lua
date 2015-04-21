@@ -177,6 +177,12 @@ describe("Router", function()
     end)
 
     describe(":execute", function()
+      it("returns nil and an error string when the http verb is unknown", function()
+        local result, message = r:execute("FOO", "/s")
+
+        assert.is_nil(result)
+        assert.equal("Could not resolve FOO /s - Unknown method: FOO", message)
+      end)
 
       it("runs the specified function with a get fixed string", function()
         r:execute("GET", "/s")
