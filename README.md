@@ -95,6 +95,55 @@ r:execute('GET',  '/hello/peter')
 r:execute('POST', '/app/4/comments', { comment = 'fascinating'})
 ```
 
+Usage with openresty
+====================
+
+`router.lua` is platform-agnostic, but you can use it with openresty like this:
+
+``` conf
+# nginx.conf
+http {
+  server {
+    listen 80;
+
+    location / {
+      content_by_lua '
+      local router = require 'router'
+      local r = router.new()
+
+      r:match({
+        GET = {
+          ["/hello"]       = function(params) ngx.print("someone said hello") end,
+          ["/hello/:name"] = function(params) ngx.print("hello, " .. params.name) end
+        },
+        POST = {
+          ["/app/:id/comments"] = function(params)
+            ngx.print("comment " .. params.comment .. " created on app " .. params.id)
+          end
+        }
+      })
+
+      local ok, errmsg = r:execute(
+        ngx.var.request_method,
+        ngx.var.request_uri,
+        ngx.req.get_uri_args(),  -- all these parameters
+        ngx.req.get_post_args(), -- will be merged in order
+        {other_arg = 1})         -- into a single "params" table
+
+      if ok then
+        ngx.status = 200
+      else
+        ngx.status = 404
+        ngx.print("Not found!")
+        ngx.log(ngx.ERROR, errmsg)
+      end
+    }
+  }
+```
+
+Read more about it in https://docs.apitools.com/blog/2014/04/24/a-small-router-for-openresty.html
+
+
 License
 =======
 
