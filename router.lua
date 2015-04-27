@@ -31,7 +31,7 @@ local router = {
 
 local COLON_BYTE = string.byte(':', 1)
 
-local function match_one_path(node, method, path, f)
+local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
     node[token] = node[token] or {}
     node = node[token]
@@ -97,7 +97,7 @@ function Router:match(method, path, f)
   for m, routes in pairs(method) do
     for path, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
-      match_one_path(self._tree[m], method, path, f)
+      match_one_path(self._tree[m], path, f)
     end
   end
 end
