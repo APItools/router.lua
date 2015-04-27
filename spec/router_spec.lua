@@ -224,12 +224,15 @@ describe("Router", function()
     end) -- :execute
   end) -- default params
 
-  describe(":get", function()
-    it("defines a GET shortcut", function()
-      r:get("/s/:id", write_dummy)
-      r:execute("GET", "/s/21")
-      assert.same(dummy.params, {id = '21'})
-    end)
+  describe("shortcuts", function()
+    for method in ("get post put delete trace connect options head"):gmatch("%S+") do
+      local verb = method:upper()
+      it(("defines a %s shortcut"):format(verb), function() -- it("defines a GET shortcut", function()
+        r[method](r, "/s/:id", write_dummy)                 --   r["get"](r, "/s/:id", write_dummy)
+        r:execute(verb, "/s/21")                            --   r:execute(verb, "/s/21")
+        assert.same(dummy.params, {id = '21'})              --   assert.same(dummy.params, {id = '21'})
+      end)                                                  -- end)
+    end
   end)
 
 end)
