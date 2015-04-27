@@ -7,3 +7,8 @@
 # v2.0.1
 
 * Throws an error when an unknown verb gets received
+
+# v2.1.0
+
+* Parameters can now be given in a splat list. So if before you had to do `r:resolve('GET', '/foo/bar', table_merge(params1, params2))`, now you can do `r:resolve('GET', '/foo/bar', params1, params2)`.
+* Passed-in parameters no longer override url parameters (url parameters are stronger). This allows using the params in a "default params" quality.
