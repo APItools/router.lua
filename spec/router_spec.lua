@@ -220,6 +220,15 @@ describe("Router", function()
           r:execute("POST", "/s/21", {id = '22'})
           assert.same(dummy.params, {id = '21'})
         end)
+
+        it("merges the params", function()
+          r:execute("POST", "/s/21", {bar = 'bar'}, {baz = 'baz'})
+          assert.same(dummy.params, {id = '21', bar = 'bar', baz = 'baz'})
+        end)
+
+        it("respects the merging order of the params", function()
+          r:execute("POST", "/s/21", {bar = 'bar', baz = 'baz'}, {baz = 'hey'})
+          assert.same(dummy.params, {id = '21', bar = 'bar', baz = 'baz'})
         end)
       end)
     end) -- :execute

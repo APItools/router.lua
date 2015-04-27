@@ -66,26 +66,43 @@ local function resolve(path, node, params)
   return false
 end
 
-local function copy(t, visited)
-  if type(t) ~= 'table' then return t end
-  if visited[t] then return visited[t] end
-  local result = {}
-  for k,v in pairs(t) do result[copy(k)] = copy(v) end
-  visited[t] = result
+local function merge(destination, origin, visited)
+  if type(origin) ~= 'table' then return origin end
+  if visited[origin] then return visited[origin] end
+  if destination == nil then destination = {} end
+
+  for k,v in pairs(origin) do
+    k = merge(nil, k, visited) -- makes a copy of k
+    if destination[k] == nil then
+      destination[k] = merge(nil, v, visited)
+    end
+  end
+
+  return destination
+end
+
+local function merge_params(...)
+  local params_list = {...}
+  local result, visited = {}, {}
+
+  for i=1, #params_list do
+    merge(result, params_list[i], visited)
+  end
+
   return result
 end
 
 ------------------------------ INSTANCE METHODS ------------------------------------
 local Router = {}
 
-function Router:resolve(method, path, params)
-  local node = self._tree[method]
+function Router:resolve(method, path, ...)
+  local node   = self._tree[method]
   if not node then return nil, ("Unknown method: %s"):format(method) end
-  return resolve(path, node , copy(params or {}, {}))
+  return resolve(path, node, merge_params(...))
 end
 
-function Router:execute(method, path, query_params)
-  local f,params = self:resolve(method, path, query_params)
+function Router:execute(method, path, ...)
+  local f,params = self:resolve(method, path, ...)
   if not f then return nil, ('Could not resolve %s %s - %s'):format(method, path, params) end
   return true, f(params)
 end
