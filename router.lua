@@ -54,7 +54,7 @@ local function resolve(path, node, params)
     if child_token:byte(1) == COLON_BYTE then -- token begins with ':'
       local param_name = child_token:sub(2)
       local param_value = params[param_name]
-      params[param_name] = param_value or current_token -- store the value in params, resolve tail path
+      params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
       local f, bindings = resolve(path, child_node, params)
       if f then return f, bindings end

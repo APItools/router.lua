@@ -215,10 +215,11 @@ describe("Router", function()
           r:execute("POST", "/s/21", {bar = '22'})
           assert.same(dummy.params, {id = '21', bar = '22'})
         end)
-        -- no need to override the params
-        it("overrides with post params", function()
+
+        it("does not override with post params", function()
           r:execute("POST", "/s/21", {id = '22'})
-          assert.same(dummy.params, {id = '22'})
+          assert.same(dummy.params, {id = '21'})
+        end)
         end)
       end)
     end) -- :execute
