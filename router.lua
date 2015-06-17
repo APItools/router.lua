@@ -119,7 +119,7 @@ function Router:match(method, path, f)
   end
 end
 
-for method in ("get post put delete trace connect options head"):gmatch("%S+") do
+for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
   Router[method] = function(self, path, f)     -- Router.get = function(self, path, f)
     return self:match(method:upper(), path, f) --   return self:match('GET', path, f)
   end                                          -- end

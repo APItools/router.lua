@@ -235,7 +235,7 @@ describe("Router", function()
   end) -- default params
 
   describe("shortcuts", function()
-    for method in ("get post put delete trace connect options head"):gmatch("%S+") do
+    for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
       local verb = method:upper()
       it(("defines a %s shortcut"):format(verb), function() -- it("defines a GET shortcut", function()
         r[method](r, "/s/:id", write_dummy)                 --   r["get"](r, "/s/:id", write_dummy)
