@@ -30,6 +30,7 @@ local router = {
 }
 
 local COLON_BYTE = string.byte(':', 1)
+local WILDCARD_BYTE = string.byte('*', 1)
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
@@ -60,6 +61,10 @@ local function resolve(path, node, params)
       if f then return f, bindings end
 
       params[param_name] = param_value -- reset the params table.
+    elseif child_token:byte(1) == WILDCARD_BYTE then -- it's a *
+      local param_name = child_token:sub(2)
+      params[param_name] = current_token .. path
+      return node[child_token]["LEAF"], params
     end
   end
 
