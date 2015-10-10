@@ -33,15 +33,13 @@ local COLON_BYTE = string.byte(':', 1)
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
-    node['TOKEN'] = node['TOKEN'] or {}
-    if COLON_BYTE == token:byte(1) then
-      param_name = token:sub(2)
-      node['TOKEN'][param_name] = node['TOKEN'][param_name] or {}
-      node = node['TOKEN'][param_name]
-    else
-      node[token] = node[token] or {}
-      node = node[token]
+    if COLON_BYTE == token:byte(1) then -- if match the ":", store the param_name in "TOKEN" array.
+      node['TOKEN'] = node['TOKEN'] or {}
+      token = token:sub(2)
+      node = node['TOKEN']
     end
+    node[token] = node[token] or {}
+    node = node[token]
   end
   node["LEAF"] = f
 end
@@ -55,7 +53,7 @@ local function resolve(path, node, params)
     if f then return f, bindings end
   end
 
-  for param_name, child_node in pairs(node['TOKEN']) do
+  for param_name, child_node in pairs(node['TOKEN'] or {}) do
     local param_value = params[param_name]
     params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
