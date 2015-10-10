@@ -33,8 +33,15 @@ local COLON_BYTE = string.byte(':', 1)
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
-    node[token] = node[token] or {}
-    node = node[token]
+    node['TOKEN'] = node['TOKEN'] or {}
+    if COLON_BYTE == token:byte(1) then
+      param_name = token:sub(2)
+      node['TOKEN'][param_name] = node['TOKEN'][param_name] or {}
+      node = node['TOKEN'][param_name]
+    else
+      node[token] = node[token] or {}
+      node = node[token]
+    end
   end
   node["LEAF"] = f
 end
@@ -43,27 +50,22 @@ local function resolve(path, node, params)
   local _, _, current_token, path = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
 
-  for child_token, child_node in pairs(node) do
-    if child_token == current_token then
-      local f, bindings = resolve(path, child_node, params)
-      if f then return f, bindings end
-    end
+  if node[current_token] then
+    local f, bindings = resolve(path, node[current_token], params)
+    if f then return f, bindings end
   end
 
-  for child_token, child_node in pairs(node) do
-    if child_token:byte(1) == COLON_BYTE then -- token begins with ':'
-      local param_name = child_token:sub(2)
-      local param_value = params[param_name]
-      params[param_name] = current_token or param_value -- store the value in params, resolve tail path
+  for param_name, child_node in pairs(node['TOKEN']) do
+    local param_value = params[param_name]
+    params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
-      local f, bindings = resolve(path, child_node, params)
-      if f then return f, bindings end
+    local f, bindings = resolve(path, child_node, params)
+    if f then return f, bindings end
 
-      params[param_name] = param_value -- reset the params table.
-    end
+    params[param_name] = param_value -- reset the params table.
   end
 
-  return false
+  return false, ''
 end
 
 local function merge(destination, origin, visited)
