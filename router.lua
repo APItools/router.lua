@@ -42,7 +42,10 @@ end
 local function resolve(path, node, params)
   local _, _, current_token, path = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
-
+  if string.match(current_token, '^?') then return node["LEAF"], params end
+  if string.match(current_token, '?') then
+      _, _, current_token, path = current_token:find("([^?.]+)(.*)")
+  end    
   for child_token, child_node in pairs(node) do
     if child_token == current_token then
       local f, bindings = resolve(path, child_node, params)
