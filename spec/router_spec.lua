@@ -234,6 +234,35 @@ describe("Router", function()
     end) -- :execute
   end) -- default params
 
+  describe('Wildcard routes', function()
+    before_each(function ()
+      r:match({
+        GET = {
+          ["/a/b/*args"]      = write_dummy,
+        },
+        POST = {
+        }
+      })
+    end)
+
+    it("match a single segment", function()
+      local ok, err = r:execute("GET", "/a/b/c")
+      assert.is_true(ok)
+      assert.same(dummy.params.args, "c")
+    end)
+
+    it("match multiple segments", function()
+      local ok, err = r:execute("GET", "/a/b/c/d/e/f")
+      assert.is_true(ok)
+      assert.same(dummy.params.args, "c/d/e/f")
+    end)
+
+    it("don't match if the segment is empty", function() 
+      local ok, err = r:execute("GET", "/a/b")
+      assert.is_nil(ok)
+    end)
+  end)
+
   describe("shortcuts", function()
     for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
       local verb = method:upper()
