@@ -274,4 +274,15 @@ describe("Router", function()
     end
   end)
 
+  describe("'any' shortcut", function()
+    for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
+      local verb = method:upper()
+      it(("matches a %s request"):format(verb), function()  -- it("matches a GET request", function()
+        r:any("/s/:id", write_dummy)                        --   r:any(r, "/s/:id", write_dummy)
+        r:execute(verb, "/s/21")                            --   r:execute(verb, "/s/21")
+        assert.same(dummy.params, {id = '21'})              --   assert.same(dummy.params, {id = '21'})
+      end)                                                  -- end)
+    end
+  end)
+
 end)
