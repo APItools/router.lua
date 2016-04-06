@@ -33,9 +33,20 @@ end)
 
 You can use `r:get(...)` instead of `r:match('GET', ...)`. There are similar shortcuts for the usual http verbs (`r:post`, `r:put`, `r:delete` ...).
 
+If you have a route which can handle multiple methods, you can use `r:any(...)`, which will match any http verb. This also passes the verb as a second parameter to the function:
+
+``` lua
+local router = require 'router'
+local r = router.new()
+
+r:any('/hello', function(params, method)
+  print('someone said hello using ' .. method)
+end)
+```
+
 In addition to that, `router.lua` supports router parameters (like `/users/:id/comment`) and extra parameters (which come from outside the route).
 
-```
+``` lua
 local router = require 'router'
 local r = router.new()
 

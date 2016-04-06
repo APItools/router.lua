@@ -31,6 +31,7 @@ local router = {
 
 local COLON_BYTE = string.byte(':', 1)
 local WILDCARD_BYTE = string.byte('*', 1)
+local HTTP_METHODS = {'get', 'post', 'put', 'patch', 'delete', 'trace', 'connect', 'options', 'head'}
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
@@ -124,10 +125,16 @@ function Router:match(method, path, fun)
   end
 end
 
-for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
-  Router[method] = function(self, path, f)     -- Router.get = function(self, path, f)
-    return self:match(method:upper(), path, f) --   return self:match('GET', path, f)
-  end                                          -- end
+for _,method in ipairs(HTTP_METHODS) do
+  Router[method] = function(self, path, f)  -- Router.get = function(self, path, f)
+    self:match(method:upper(), path, f)     --   return self:match('GET', path, f)
+  end                                       -- end
+end
+
+Router['any'] = function(self, path, f) -- match any method
+  for _,method in ipairs(HTTP_METHODS) do
+    self:match(method:upper(), path, function(params) return f(params, method) end)
+  end
 end
 
 local router_mt = { __index = Router }
