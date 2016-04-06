@@ -126,9 +126,9 @@ function Router:match(method, path, f)
 end
 
 for _,method in ipairs(HTTP_METHODS) do
-  Router[method] = function(self, path, f)                                          -- Router.get = function(self, path, f)
-    self:match(method:upper(), path, function(params) return f(params, method) end) --   return self:match('GET', path, f)
-  end                                                                               -- end
+  Router[method] = function(self, path, f)  -- Router.get = function(self, path, f)
+    self:match(method:upper(), path, f)     --   return self:match('GET', path, f)
+  end                                       -- end
 end
 
 Router['any'] = function(self, path, f) -- match any method
