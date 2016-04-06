@@ -1,7 +1,5 @@
 local router = require 'router'
 
-local LEAF = "LEAF"
-
 describe("Router", function()
   local r
   local dummy
@@ -246,13 +244,13 @@ describe("Router", function()
     end)
 
     it("match a single segment", function()
-      local ok, err = r:execute("GET", "/a/b/c")
+      local ok, _ = r:execute("GET", "/a/b/c")
       assert.is_true(ok)
       assert.same(dummy.params.args, "c")
     end)
 
     it("match multiple segments", function()
-      local ok, err = r:execute("GET", "/a/b/c/d/e/f")
+      local ok, _ = r:execute("GET", "/a/b/c/d/e/f")
       assert.is_true(ok)
       assert.same(dummy.params.args, "c/d/e/f")
     end)
@@ -260,6 +258,7 @@ describe("Router", function()
     it("don't match if the segment is empty", function() 
       local ok, err = r:execute("GET", "/a/b")
       assert.is_nil(ok)
+      assert.same(err, 'Could not resolve GET /a/b - nil')
     end)
   end)
 
