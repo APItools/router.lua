@@ -41,12 +41,12 @@ local function match_one_path(node, path, f)
 end
 
 local function resolve(path, node, params)
-  local _, _, current_token, path = path:find("([^/.]+)(.*)")
+  local _, _, current_token, rest = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
 
   for child_token, child_node in pairs(node) do
     if child_token == current_token then
-      local f, bindings = resolve(path, child_node, params)
+      local f, bindings = resolve(rest, child_node, params)
       if f then return f, bindings end
     end
   end
@@ -57,13 +57,13 @@ local function resolve(path, node, params)
       local param_value = params[param_name]
       params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
-      local f, bindings = resolve(path, child_node, params)
+      local f, bindings = resolve(rest, child_node, params)
       if f then return f, bindings end
 
       params[param_name] = param_value -- reset the params table.
     elseif child_token:byte(1) == WILDCARD_BYTE then -- it's a *
       local param_name = child_token:sub(2)
-      params[param_name] = current_token .. path
+      params[param_name] = current_token .. rest
       return node[child_token]["LEAF"], params
     end
   end
@@ -112,14 +112,14 @@ function Router:execute(method, path, ...)
   return true, f(params)
 end
 
-function Router:match(method, path, f)
+function Router:match(method, path, fun)
   if type(method) == 'string' then -- always make the method to table.
-    method = {[method] = {[path] = f}}
+    method = {[method] = {[path] = fun}}
   end
   for m, routes in pairs(method) do
-    for path, f in pairs(routes) do
+    for p, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
-      match_one_path(self._tree[m], path, f)
+      match_one_path(self._tree[m], p, f)
     end
   end
 end
