@@ -110,7 +110,7 @@ end
 function Router:execute(method, path, ...)
   local f,params = self:resolve(method, path, ...)
   if not f then return nil, ('Could not resolve %s %s - %s'):format(method, path, params) end
-  return true, f(params, method)
+  return true, f(params)
 end
 
 function Router:match(method, path, f)
@@ -126,17 +126,15 @@ function Router:match(method, path, f)
 end
 
 for _,method in ipairs(HTTP_METHODS) do
-  Router[method] = function(self, path, f)     -- Router.get = function(self, path, f)
-    return self:match(method:upper(), path, f) --   return self:match('GET', path, f)
-  end                                          -- end
+  Router[method] = function(self, path, f)                                          -- Router.get = function(self, path, f)
+    self:match(method:upper(), path, function(params) return f(params, method) end) --   return self:match('GET', path, f)
+  end                                                                               -- end
 end
 
 Router['any'] = function(self, path, f) -- match any method
-  local methodt = {}
   for _,method in ipairs(HTTP_METHODS) do
-    methodt[method:upper()] = {[path] = f}
+    self:match(method:upper(), path, function(params) return f(params, method) end)
   end
-  return self:match(methodt, path, f)
 end
 
 local router_mt = { __index = Router }
