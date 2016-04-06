@@ -110,7 +110,7 @@ end
 function Router:execute(method, path, ...)
   local f,params = self:resolve(method, path, ...)
   if not f then return nil, ('Could not resolve %s %s - %s'):format(method, path, params) end
-  return true, f(params)
+  return true, f(params, method)
 end
 
 function Router:match(method, path, f)
