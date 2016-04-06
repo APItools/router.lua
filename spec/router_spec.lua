@@ -41,12 +41,6 @@ describe("Router", function()
         assert.same(dummy.params, {id="2"})
       end)
 
-      it("supports an extension on a param", function()
-        r:match("GET", "/foo/:id.json", write_dummy)
-
-        r:execute("GET", "/foo/1.json")
-        assert.same(dummy.params, {id="1.json"})
-      end)
     end)
 
     describe('when first param is a table', function()
@@ -83,15 +77,6 @@ describe("Router", function()
         assert.same(dummy.params, {id="2"})
       end)
 
-      it("supports an extension on a param", function()
-        r:match({
-          GET = {
-            ["/foo/:id.json"] = write_dummy
-          }
-        })
-        r:execute("GET", "/foo/1.json")
-        assert.same(dummy.params, {id="1.json"})
-      end)
     end)
   end)
 
@@ -139,7 +124,7 @@ describe("Router", function()
       it("gets url params with an extension", function()
         local f, params = r:resolve("GET", "/s/21.json")
         assert.equals(type(f), 'function')
-        assert.same(params, {id = "21"})
+        assert.same(params, {id = "21.json"})
       end)
 
       it("posts url params with an extension", function()
