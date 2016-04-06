@@ -136,7 +136,7 @@ http {
 
       local ok, errmsg = r:execute(
         ngx.var.request_method,
-        ngx.var.request_uri,
+        ngx.var.uri,
         ngx.req.get_uri_args(),  -- all these parameters
         ngx.req.get_post_args(), -- will be merged in order
         {other_arg = 1})         -- into a single "params" table
