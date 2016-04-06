@@ -32,18 +32,25 @@ local router = {
 local COLON_BYTE = string.byte(':', 1)
 local WILDCARD_BYTE = string.byte('*', 1)
 local HTTP_METHODS = {'get', 'post', 'put', 'patch', 'delete', 'trace', 'connect', 'options', 'head'}
+local STR_STR_MATCH_SLASH = "[^/.]+"
+local STR_STR_SPLIT_SLASH = "([^/]+)(.*)"
+local STR_LEAF = "LEAF"
+local STR_TABLE = "table"
+local STR_STRING = "string"
+local STR_ALL_METHODS = "get post put patch delete trace connect options head"
+local STR_ANY = "any"
 
 local function match_one_path(node, path, f)
-  for token in path:gmatch("[^/.]+") do
+  for token in path:gmatch(STR_STR_MATCH_SLASH) do
     node[token] = node[token] or {}
     node = node[token]
   end
-  node["LEAF"] = f
+  node[STR_LEAF] = f
 end
 
 local function resolve(path, node, params)
-  local _, _, current_token, rest = path:find("([^/.]+)(.*)")
-  if not current_token then return node["LEAF"], params end
+  local _, _, current_token, rest = path:find(STR_STR_SPLIT_SLASH)
+  if not current_token then return node[STR_LEAF], params end
 
   for child_token, child_node in pairs(node) do
     if child_token == current_token then
@@ -65,7 +72,7 @@ local function resolve(path, node, params)
     elseif child_token:byte(1) == WILDCARD_BYTE then -- it's a *
       local param_name = child_token:sub(2)
       params[param_name] = current_token .. rest
-      return node[child_token]["LEAF"], params
+      return node[child_token][STR_LEAF], params
     end
   end
 
@@ -73,7 +80,7 @@ local function resolve(path, node, params)
 end
 
 local function merge(destination, origin, visited)
-  if type(origin) ~= 'table' then return origin end
+  if type(origin) ~= STR_TABLE then return origin end
   if visited[origin] then return visited[origin] end
   if destination == nil then destination = {} end
 
@@ -114,7 +121,7 @@ function Router:execute(method, path, ...)
 end
 
 function Router:match(method, path, fun)
-  if type(method) == 'string' then -- always make the method to table.
+  if type(method) == STR_STRING then -- always make the method to table.
     method = {[method] = {[path] = fun}}
   end
   for m, routes in pairs(method) do
@@ -131,7 +138,7 @@ for _,method in ipairs(HTTP_METHODS) do
   end                                       -- end
 end
 
-Router['any'] = function(self, path, f) -- match any method
+Router[STR_ANY] = function(self, path, f) -- match any method
   for _,method in ipairs(HTTP_METHODS) do
     self:match(method:upper(), path, function(params) return f(params, method) end)
   end
