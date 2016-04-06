@@ -143,6 +143,24 @@ http {
 
 Read more about it in https://docs.apitools.com/blog/2014/04/24/a-small-router-for-openresty.html
 
+Testing
+=======
+
+Install dependencies:
+
+```shell
+luarocks install luacheck
+luarocks install busted
+luarocks install luacov
+luarocks install luacov-coveralls
+```
+
+And run tests:
+
+```shell
+luacheck --std max+busted *.lua spec
+busted --verbose --coverage --lpath=./?.lua
+```
 
 License
 =======
