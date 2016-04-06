@@ -283,6 +283,15 @@ describe("Router", function()
         assert.same(dummy.params, {id = '21'})              --   assert.same(dummy.params, {id = '21'})
       end)                                                  -- end)
     end
+
+    it("passes the http method", function()
+      for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
+        local verb = method:upper()
+        r:any("/s/:id", function(params, method) dummy.params = {params = params, method = method} end)
+        r:execute(verb, "/s/21")
+        assert.same(dummy.params, {params = {id = '21'}, method = method})
+      end
+    end)
   end)
 
 end)
