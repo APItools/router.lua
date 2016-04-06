@@ -31,21 +31,25 @@ local router = {
 
 local COLON_BYTE = string.byte(':', 1)
 
+local STR_STR_MATCH_SLASH = "[^/.]+"
+local STR_STR_SPLIT_SLASH = "([^/]+)(.*)"
+local STR_LEAF = "LEAF"
+local STR_TABLE = "table"
+local STR_STRING = "string"
+local STR_ALL_METHODS = "get post put patch delete trace connect options head"
+local STR_MATCH_PERCENT_S = "%S+"
+
 local function match_one_path(node, path, f)
-  for token in path:gmatch("[^/.]+") do
+  for token in path:gmatch(STR_STR_MATCH_SLASH) do
     node[token] = node[token] or {}
     node = node[token]
   end
-  node["LEAF"] = f
+  node[STR_LEAF] = f
 end
 
 local function resolve(path, node, params)
-  local _, _, current_token, path = path:find("([^/.]+)(.*)")
-  if not current_token then return node["LEAF"], params end
-  if string.match(current_token, '^?') then return node["LEAF"], params end
-  if string.match(current_token, '?') then
-      _, _, current_token, path = current_token:find("([^?.]+)(.*)")
-  end    
+  local _, _, current_token, path = path:find(STR_STR_SPLIT_SLASH)
+  if not current_token then return node[STR_LEAF], params end
   for child_token, child_node in pairs(node) do
     if child_token == current_token then
       local f, bindings = resolve(path, child_node, params)
@@ -70,7 +74,7 @@ local function resolve(path, node, params)
 end
 
 local function merge(destination, origin, visited)
-  if type(origin) ~= 'table' then return origin end
+  if type(origin) ~= STR_TABLE then return origin end
   if visited[origin] then return visited[origin] end
   if destination == nil then destination = {} end
 
@@ -111,7 +115,7 @@ function Router:execute(method, path, ...)
 end
 
 function Router:match(method, path, f)
-  if type(method) == 'string' then -- always make the method to table.
+  if type(method) == STR_STRING then -- always make the method to table.
     method = {[method] = {[path] = f}}
   end
   for m, routes in pairs(method) do
@@ -122,7 +126,7 @@ function Router:match(method, path, f)
   end
 end
 
-for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
+for method in (STR_ALL_METHODS):gmatch(STR_MATCH_PERCENT_S) do
   Router[method] = function(self, path, f)     -- Router.get = function(self, path, f)
     return self:match(method:upper(), path, f) --   return self:match('GET', path, f)
   end                                          -- end
