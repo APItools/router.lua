@@ -1,7 +1,5 @@
 local router = require 'router'
 
-local LEAF = "LEAF"
-
 describe("Router", function()
   local r
   local dummy
@@ -234,6 +232,36 @@ describe("Router", function()
     end) -- :execute
   end) -- default params
 
+  describe('Wildcard routes', function()
+    before_each(function ()
+      r:match({
+        GET = {
+          ["/a/b/*args"]      = write_dummy,
+        },
+        POST = {
+        }
+      })
+    end)
+
+    it("match a single segment", function()
+      local ok, _ = r:execute("GET", "/a/b/c")
+      assert.is_true(ok)
+      assert.same(dummy.params.args, "c")
+    end)
+
+    it("match multiple segments", function()
+      local ok, _ = r:execute("GET", "/a/b/c/d/e/f")
+      assert.is_true(ok)
+      assert.same(dummy.params.args, "c/d/e/f")
+    end)
+
+    it("don't match if the segment is empty", function() 
+      local ok, err = r:execute("GET", "/a/b")
+      assert.is_nil(ok)
+      assert.same(err, 'Could not resolve GET /a/b - nil')
+    end)
+  end)
+
   describe("shortcuts", function()
     for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
       local verb = method:upper()
@@ -243,6 +271,26 @@ describe("Router", function()
         assert.same(dummy.params, {id = '21'})              --   assert.same(dummy.params, {id = '21'})
       end)                                                  -- end)
     end
+  end)
+
+  describe("'any' shortcut", function()
+    for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
+      local verb = method:upper()
+      it(("matches a %s request"):format(verb), function()  -- it("matches a GET request", function()
+        r:any("/s/:id", write_dummy)                        --   r:any(r, "/s/:id", write_dummy)
+        r:execute(verb, "/s/21")                            --   r:execute(verb, "/s/21")
+        assert.same(dummy.params, {id = '21'})              --   assert.same(dummy.params, {id = '21'})
+      end)                                                  -- end)
+    end
+
+    it("passes the http method", function()
+      for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
+        local verb = method:upper()
+        r:any("/s/:id", function(params, http_method) dummy.params = {params = params, method = http_method} end)
+        r:execute(verb, "/s/21")
+        assert.same(dummy.params, {params = {id = '21'}, method = method})
+      end
+    end)
   end)
 
 end)

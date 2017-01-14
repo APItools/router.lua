@@ -30,9 +30,15 @@ local router = {
 }
 
 local COLON_BYTE = string.byte(':', 1)
+local WILDCARD_BYTE = string.byte('*', 1)
+local HTTP_METHODS = {'get', 'post', 'put', 'patch', 'delete', 'trace', 'connect', 'options', 'head'}
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
+    if WILDCARD_BYTE == token:byte(1) then
+      node['WILDCARD'] = {['LEAF'] = f, ['TOKEN'] = token:sub(2)}
+      return
+    end
     if COLON_BYTE == token:byte(1) then -- if match the ":", store the param_name in "TOKEN" array.
       node['TOKEN'] = node['TOKEN'] or {}
       token = token:sub(2)
@@ -45,11 +51,16 @@ local function match_one_path(node, path, f)
 end
 
 local function resolve(path, node, params)
-  local _, _, current_token, path = path:find("([^/.]+)(.*)")
+  local _, _, current_token, rest = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
 
+  if node['WILDCARD'] then
+    params[node['WILDCARD']['TOKEN']] = current_token .. rest
+    return node['WILDCARD']['LEAF'], params
+  end
+
   if node[current_token] then
-    local f, bindings = resolve(path, node[current_token], params)
+    local f, bindings = resolve(rest, node[current_token], params)
     if f then return f, bindings end
   end
 
@@ -57,13 +68,13 @@ local function resolve(path, node, params)
     local param_value = params[param_name]
     params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
-    local f, bindings = resolve(path, child_node, params)
+    local f, bindings = resolve(rest, child_node, params)
     if f then return f, bindings end
 
     params[param_name] = param_value -- reset the params table.
   end
 
-  return false, ''
+  return false
 end
 
 local function merge(destination, origin, visited)
@@ -97,32 +108,38 @@ local Router = {}
 
 function Router:resolve(method, path, ...)
   local node   = self._tree[method]
-  if not node then return nil, ("Unknown method: %s"):format(method) end
+  if not node then return nil, ("Unknown method: %s"):format(tostring(method)) end
   return resolve(path, node, merge_params(...))
 end
 
 function Router:execute(method, path, ...)
   local f,params = self:resolve(method, path, ...)
-  if not f then return nil, ('Could not resolve %s %s - %s'):format(method, path, params) end
+  if not f then return nil, ('Could not resolve %s %s - %s'):format(tostring(method), tostring(path), tostring(params)) end
   return true, f(params)
 end
 
-function Router:match(method, path, f)
+function Router:match(method, path, fun)
   if type(method) == 'string' then -- always make the method to table.
-    method = {[method] = {[path] = f}}
+    method = {[method] = {[path] = fun}}
   end
   for m, routes in pairs(method) do
-    for path, f in pairs(routes) do
+    for p, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
-      match_one_path(self._tree[m], path, f)
+      match_one_path(self._tree[m], p, f)
     end
   end
 end
 
-for method in ("get post put patch delete trace connect options head"):gmatch("%S+") do
-  Router[method] = function(self, path, f)     -- Router.get = function(self, path, f)
-    return self:match(method:upper(), path, f) --   return self:match('GET', path, f)
-  end                                          -- end
+for _,method in ipairs(HTTP_METHODS) do
+  Router[method] = function(self, path, f)  -- Router.get = function(self, path, f)
+    self:match(method:upper(), path, f)     --   return self:match('GET', path, f)
+  end                                       -- end
+end
+
+Router['any'] = function(self, path, f) -- match any method
+  for _,method in ipairs(HTTP_METHODS) do
+    self:match(method:upper(), path, function(params) return f(params, method) end)
+  end
 end
 
 local router_mt = { __index = Router }
