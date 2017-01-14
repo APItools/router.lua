@@ -255,7 +255,7 @@ describe("Router", function()
       assert.same(dummy.params.args, "c/d/e/f")
     end)
 
-    it("don't match if the segment is empty", function() 
+    it("don't match if the segment is empty", function()
       local ok, err = r:execute("GET", "/a/b")
       assert.is_nil(ok)
       assert.same(err, 'Could not resolve GET /a/b - nil')
