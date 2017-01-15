@@ -35,6 +35,15 @@ local HTTP_METHODS = {'get', 'post', 'put', 'patch', 'delete', 'trace', 'connect
 
 local function match_one_path(node, path, f)
   for token in path:gmatch("[^/.]+") do
+    if WILDCARD_BYTE == token:byte(1) then
+      node['WILDCARD'] = {['LEAF'] = f, ['TOKEN'] = token:sub(2)}
+      return
+    end
+    if COLON_BYTE == token:byte(1) then -- if match the ":", store the param_name in "TOKEN" array.
+      node['TOKEN'] = node['TOKEN'] or {}
+      token = token:sub(2)
+      node = node['TOKEN']
+    end
     node[token] = node[token] or {}
     node = node[token]
   end
@@ -45,28 +54,24 @@ local function resolve(path, node, params)
   local _, _, current_token, rest = path:find("([^/.]+)(.*)")
   if not current_token then return node["LEAF"], params end
 
-  for child_token, child_node in pairs(node) do
-    if child_token == current_token then
-      local f, bindings = resolve(rest, child_node, params)
-      if f then return f, bindings end
-    end
+  if node['WILDCARD'] then
+    params[node['WILDCARD']['TOKEN']] = current_token .. rest
+    return node['WILDCARD']['LEAF'], params
   end
 
-  for child_token, child_node in pairs(node) do
-    if child_token:byte(1) == COLON_BYTE then -- token begins with ':'
-      local param_name = child_token:sub(2)
-      local param_value = params[param_name]
-      params[param_name] = current_token or param_value -- store the value in params, resolve tail path
+  if node[current_token] then
+    local f, bindings = resolve(rest, node[current_token], params)
+    if f then return f, bindings end
+  end
 
-      local f, bindings = resolve(rest, child_node, params)
-      if f then return f, bindings end
+  for param_name, child_node in pairs(node['TOKEN'] or {}) do
+    local param_value = params[param_name]
+    params[param_name] = current_token or param_value -- store the value in params, resolve tail path
 
-      params[param_name] = param_value -- reset the params table.
-    elseif child_token:byte(1) == WILDCARD_BYTE then -- it's a *
-      local param_name = child_token:sub(2)
-      params[param_name] = current_token .. rest
-      return node[child_token]["LEAF"], params
-    end
+    local f, bindings = resolve(rest, child_node, params)
+    if f then return f, bindings end
+
+    params[param_name] = param_value -- reset the params table.
   end
 
   return false
