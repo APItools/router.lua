@@ -1,0 +1,11 @@
+---
+engines:
+  luacheck:
+    enabled: true
+    channel: beta
+    checks:
+      LC631:
+        enabled: false
+ratings:
+  paths:
+  - "**.lua"
