@@ -120,8 +120,18 @@ end
 
 function Router:match(method, path, fun)
   if type(method) == 'string' then -- always make the method to table.
-    method = {[method] = {[path] = fun}}
+    method = {method}
   end
+
+  for i, m in ipairs(method) do
+    -- convert shorthand methods into longhand
+    if type(m) == 'string' then
+      if method[m] == nil then method[m] = {} end
+      method[m][path] = fun
+      method[i] = nil
+    end
+  end
+
   for m, routes in pairs(method) do
     for p, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
