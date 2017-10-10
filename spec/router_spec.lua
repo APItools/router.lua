@@ -49,7 +49,64 @@ describe("Router", function()
       end)
     end)
 
-    describe('when first param is a table', function()
+    describe("when first param is a numeric table", function()
+      it("understands fixed strings", function()
+        r:match({"GET", "POST"}, "/foo", write_dummy)
+
+        r:execute("GET", "/foo", {status = "ok"})
+        assert.same(dummy.params, {status = "ok"})
+
+        r:execute("POST", "/foo", {status = "ok"})
+        assert.same(dummy.params, {status = "ok"})
+      end)
+
+      it("understands chained fixed strings", function()
+        r:match({"GET", "POST"}, "/foo/bar", write_dummy)
+
+        r:execute("GET", "/foo/bar", {status = "ok"})
+        assert.same(dummy.params, {status = "ok"})
+
+        r:execute("POST", "/foo/bar", {status = "ok"})
+        assert.same(dummy.params, {status = "ok"})
+      end)
+
+      it("understands params", function()
+        r:match({"GET", "POST"}, "/foo/:id", write_dummy)
+
+        r:execute("GET", "/foo/bar")
+        assert.same(dummy.params, {id="bar"})
+
+        r:execute("POST", "/foo/bar")
+        assert.same(dummy.params, {id="bar"})
+      end)
+
+      it("does not duplicate the same node twice for the same param id", function()
+        r:match({"GET", "POST"}, "/foo/:id/bar", write_dummy)
+        r:match({"GET", "POST"}, "/foo/:id/baz", write_dummy)
+
+        r:execute("GET", "/foo/1/bar")
+        assert.same(dummy.params, {id="1"})
+        r:execute("POST", "/foo/1/bar")
+        assert.same(dummy.params, {id="1"})
+
+        r:execute("GET", "/foo/2/baz")
+        assert.same(dummy.params, {id="2"})
+        r:execute("POST", "/foo/2/baz")
+        assert.same(dummy.params, {id="2"})
+      end)
+
+      it("supports an extension on a param", function()
+        r:match({"GET", "POST"}, "/foo/:id.json", write_dummy)
+
+        r:execute("GET", "/foo/1.json")
+        assert.same(dummy.params, {id="1"})
+
+        r:execute("POST", "/foo/1.json")
+        assert.same(dummy.params, {id="1"})
+      end)
+    end)
+
+    describe('when first param is a hash table', function()
       it("understands fixed strings", function()
         r:match({ GET = { ["/foo"] = write_dummy} })
         r:execute("GET", "/foo", {status = "ok"})
