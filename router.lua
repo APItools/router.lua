@@ -123,16 +123,19 @@ function Router:match(method, path, fun)
     method = {method}
   end
 
-  for i, m in ipairs(method) do
-    -- convert shorthand methods into longhand
-    if type(m) == 'string' then
-      if method[m] == nil then method[m] = {} end
-      method[m][path] = fun
-      method[i] = nil
+  local parsed_methods = {}
+  for k, v in pairs(method) do
+    if type(v) == 'string' then
+      -- convert shorthand methods into longhand
+      if parsed_methods[v] == nil then parsed_methods[v] = {} end
+      parsed_methods[v][path] = fun
+    else
+      -- pass methods already in longhand format onwards
+      parsed_methods[k] = v
     end
   end
 
-  for m, routes in pairs(method) do
+  for m, routes in pairs(parsed_methods) do
     for p, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
       match_one_path(self._tree[m], p, f)
