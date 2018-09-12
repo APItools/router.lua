@@ -120,9 +120,22 @@ end
 
 function Router:match(method, path, fun)
   if type(method) == 'string' then -- always make the method to table.
-    method = {[method] = {[path] = fun}}
+    method = {method}
   end
-  for m, routes in pairs(method) do
+
+  local parsed_methods = {}
+  for k, v in pairs(method) do
+    if type(v) == 'string' then
+      -- convert shorthand methods into longhand
+      if parsed_methods[v] == nil then parsed_methods[v] = {} end
+      parsed_methods[v][path] = fun
+    else
+      -- pass methods already in longhand format onwards
+      parsed_methods[k] = v
+    end
+  end
+
+  for m, routes in pairs(parsed_methods) do
     for p, f in pairs(routes) do
       if not self._tree[m] then self._tree[m] = {} end
       match_one_path(self._tree[m], p, f)
