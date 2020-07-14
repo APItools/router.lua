@@ -89,6 +89,7 @@ local function merge(destination, origin, visited)
     end
   end
 
+  setmetatable(destination, getmetatable(origin))
   return destination
 end
 
