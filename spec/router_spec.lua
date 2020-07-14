@@ -285,6 +285,14 @@ describe("Router", function()
           r:execute("POST", "/s/21", {bar = 'bar', baz = 'baz'}, {baz = 'hey'})
           assert.same(dummy.params, {id = '21', bar = 'bar', baz = 'baz'})
         end)
+
+        it("keeps metatables passed as parameters", function()
+          local meta = {__index = {addn = function(self,value) return value + self.n end}}
+          local param = {n = 5}
+          setmetatable(param, meta)
+          r:execute("POST", "/s/21", param)
+          assert.are.equal(dummy.params:addn(3), 5 + 3)
+        end)
       end)
     end) -- :execute
   end) -- default params
